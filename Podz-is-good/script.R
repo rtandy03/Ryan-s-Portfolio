@@ -91,7 +91,7 @@ imp_cols <- c(
   "personId", "name", "heightInches", "gameId", "gameDateTimeEst",
   "gameType", "gameLabel", "gameSubLabel", "seriesGameNumber", "win",
   "home", "playerteamId", "opponentteamId", "playerteamName", "opponentteamName",
-  "startingPosition", "numMinutes", "points", "assists", "reboundsTotal",
+  "numMinutes", "points", "assists", "reboundsTotal",
   "reboundsOffensive", "reboundsDefensive", "fieldGoalsMade", "fieldGoalsAttempted",
   "fieldGoalsPercentage", "threePointersMade", "threePointersAttempted",
   "threePointersPercentage", "freeThrowsMade", "freeThrowsAttempted",
