@@ -19,7 +19,6 @@ team_statsE_df <- read.csv("data/TeamStatisticsExtended.csv")
 ### Data cleaning -----------------------------------------------------------
 
 
-
 # List of first and second string point guards
 
 point_guards <- c(
@@ -140,7 +139,10 @@ current_pg_df <- current_pg_df %>%
   select(season, everything())
 
 
-temp <- current_pg_df %>% 
+# Make yearly totals dataframe
+
+yearly_totals_df <- current_pg_df %>% 
+  mutate(numMinutes = as.double(numMinutes)) %>% 
   filter(gameType %in% c("Regular Season", "Playoffs"), 
          numMinutes > 0, 
          !is.na(name)) %>% 
@@ -150,5 +152,27 @@ temp <- current_pg_df %>%
             total_rebounds = sum(reboundsTotal, na.rm = TRUE),
             total_steals = sum(steals, na.rm = TRUE),
             total_blocks = sum(blocks, na.rm = TRUE),
+            total_minutes = sum(numMinutes, na.rm = TRUE),
+            total_fgm = sum(fieldGoalsMade, na.rm = TRUE),
+            total_fga = sum(fieldGoalsAttempted, na.rm = TRUE),
+            total_3ptm = sum(threePointersMade, na.rm = TRUE),
+            total_3pta = sum(threePointersAttempted, na.rm = TRUE),
+            total_ftm = sum(freeThrowsMade, na.rm = TRUE),
+            total_fta = sum(freeThrowsAttempted, na.rm = TRUE),
+            total_turnovers = sum(turnovers, na.rm = TRUE),
+            total_personal_fouls = sum(foulsPersonal, na.rm = TRUE),
+            total_plusMinus = sum(plusMinusPoints, na.rm = TRUE),
+            total_off_rating = sum(offensiveRating, na.rm = TRUE),
+            total_def_rating = sum(defensiveRating, na.rm = TRUE),
+            total_net_rating = sum(netRating, na.rm = TRUE),
+            total_eff_fg_percentage = sum(effectiveFieldGoalPercentage, na.rm = TRUE),
+            total_true_shooting_percentage = sum(trueShootingPercentage, na.rm = TRUE),
+            total_usage = sum(usagePercentage, na.rm = TRUE),
+            total_pace = sum(pace, na.rm = TRUE),
+            total_possessions = sum(possessions, na.rm = TRUE),
+            total_second_chance_pts = sum(pointsSecondChance, na.rm = TRUE),
+            total_fast_break_pts = sum(pointsFastBreak, na.rm = TRUE),
             total_games = n(),
             .groups = "drop")
+
+
