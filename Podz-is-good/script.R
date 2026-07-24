@@ -1,10 +1,12 @@
 
-# Brandin Podziemski Supremecy --------------------------------------------
+### Brandin Podziemski Supremecy --------------------------------------------
 
 getwd()
 setwd("C:/Users/ryant/OneDrive/Documents/Ryan-s-Portfolio/Podz-is-good")
 
 library(tidyverse)
+
+# Load Datasets 
 
 games_df <- read.csv("data/Games.csv")
 players_df <- read.csv("data/Players.csv")
@@ -14,8 +16,11 @@ team_stats_df <- read.csv("data/TeamStatistics.csv")
 team_statsE_df <- read.csv("data/TeamStatisticsExtended.csv")
 
 
-# Data cleaning -----------------------------------------------------------
+### Data cleaning -----------------------------------------------------------
 
+
+
+# List of first and second string point guards
 
 point_guards <- c(
   "C.J. McCollum",
@@ -38,6 +43,7 @@ point_guards <- c(
   "Marcus Sasser",
   "Stephen Curry",
   "De'Anthony Melton",
+  "Brandin Podziemski",
   "Fred VanVleet",
   "Marcus Smart",
   "Tyrese Haliburton",
@@ -87,8 +93,11 @@ current_pg_df <- players_df %>%
 
 colnames(current_pg_df)  
 
+
+# Vector of columns I deemed important
+
 imp_cols <- c(
-  "personId", "name", "heightInches", "gameId", "gameDateTimeEst",
+  "comment", "personId", "name", "heightInches", "gameId", "gameDateTimeEst",
   "gameType", "gameLabel", "gameSubLabel", "seriesGameNumber", "win",
   "home", "playerteamId", "opponentteamId", "playerteamName", "opponentteamName",
   "numMinutes", "points", "assists", "reboundsTotal",
@@ -99,16 +108,21 @@ imp_cols <- c(
   "plusMinusPoints", "offensiveRating", "defensiveRating", "netRating",
   "assistPercentage", "assistToTurnoverRatio", "assistRatio", "reboundPercentage",
   "teamTurnoverPercentage", "effectiveFieldGoalPercentage", "trueShootingPercentage",
-  "usagePercentage", "pace", "pacePer40", "playerImpactEstimate",
-  "possessions", "pointsOffTurnovers", "pointsSecondChance", "pointsFastBreak",
-  "pointsInPaint", "percentPoints2Point", "percentPoints3Point", "percentPointsFastBreak",
-  "percentPointsFreeThrow", "percentTeamPoints"
+  "usagePercentage", "pace", "pacePer40", "possessions", "pointsOffTurnovers", 
+  "pointsSecondChance", "pointsFastBreak","pointsInPaint", "percentPoints2Point",
+  "percentPoints3Point", "percentPointsFastBreak"
 )
+
+
+# Select important columns and more separating
 
 current_pg_df <- current_pg_df %>% 
   select(imp_cols) %>% 
   separate(gameDateTimeEst, c("game_date", "time_est"), sep = " ") %>% 
   separate(game_date, c("year", "month", "day"), sep = "-")
+
+
+# Months of first and second half of season for new column purposes
 
 first_half <- c(10, 11, 12)
 second_half <- c(1, 2, 3, 4, 5, 6)
@@ -126,5 +140,15 @@ current_pg_df <- current_pg_df %>%
   select(season, everything())
 
 
-
-
+temp <- current_pg_df %>% 
+  filter(gameType %in% c("Regular Season", "Playoffs"), 
+         numMinutes > 0, 
+         !is.na(name)) %>% 
+  group_by(gameType, season, personId, name, year) %>% 
+  summarise(total_points = sum(points),
+            total_assists = sum(assists, na.rm = TRUE),
+            total_rebounds = sum(reboundsTotal, na.rm = TRUE),
+            total_steals = sum(steals, na.rm = TRUE),
+            total_blocks = sum(blocks, na.rm = TRUE),
+            total_games = n(),
+            .groups = "drop")
