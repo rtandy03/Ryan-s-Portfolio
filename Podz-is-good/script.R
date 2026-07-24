@@ -13,6 +13,10 @@ player_statsE_df <- read.csv("data/PlayerStatisticsExtended.csv")
 team_stats_df <- read.csv("data/TeamStatistics.csv")
 team_statsE_df <- read.csv("data/TeamStatisticsExtended.csv")
 
+
+# Data cleaning -----------------------------------------------------------
+
+
 point_guards <- c(
   "C.J. McCollum",
   "Ryan Nembhard",
@@ -106,5 +110,21 @@ current_pg_df <- current_pg_df %>%
   separate(gameDateTimeEst, c("game_date", "time_est"), sep = " ") %>% 
   separate(game_date, c("year", "month", "day"), sep = "-")
 
-month_window <- c(10, 11, 12, 1, 2, 3, 4, 5, 6)
+first_half <- c(10, 11, 12)
+second_half <- c(1, 2, 3, 4, 5, 6)
+
+current_pg_df <- current_pg_df %>% 
+  mutate(
+    year = as.numeric(year),
+    month = as.numeric(month),
+    day = as.numeric(day),
+    season = case_when(
+      month %in% first_half ~ paste0(year, "-", substr(year + 1, 3, 4)),
+      month %in% second_half ~ paste0(year - 1, "-", substr(year, 3, 4))
+    )
+  ) %>% 
+  select(season, everything())
+
+
+
 
