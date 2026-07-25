@@ -197,8 +197,8 @@ yearly_totals_df <- current_pg_df %>%
     avg_usage = total_usage / total_games,
     avg_pace = total_pace / total_games,
     avg_possessions = total_possessions / total_games,
-    avg_secondChance = total_second_chance_pts / total_games,
-    avg_fastBreak = total_fast_break_pts / total_games
+    avg_secondChance_pts = total_second_chance_pts / total_games,
+    avg_fastBreak_pts = total_fast_break_pts / total_games
   )
 
 
