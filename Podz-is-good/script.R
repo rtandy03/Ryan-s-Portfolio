@@ -173,6 +173,32 @@ yearly_totals_df <- current_pg_df %>%
             total_second_chance_pts = sum(pointsSecondChance, na.rm = TRUE),
             total_fast_break_pts = sum(pointsFastBreak, na.rm = TRUE),
             total_games = n(),
-            .groups = "drop")
+            .groups = "drop") %>% 
+  mutate(
+    ppg = total_points / total_games,
+    apg = total_assists / total_games,
+    rpg = total_rebounds / total_games,
+    steals_pg = total_steals / total_games,
+    blocks_pg = total_blocks / total_games,
+    mpg = total_minutes / total_games,
+    avg_fgm = total_fgm / total_games,
+    avg_fga = total_fga / total_games,
+    avg_3ptm = total_3ptm / total_games,
+    avg_3pta = total_3pta / total_games,
+    avg_ftm = total_ftm / total_games,
+    avg_fta = total_fta / total_games,
+    avg_turnovers = total_turnovers / total_games,
+    avg_personalFoul = total_personal_fouls / total_games,
+    avg_plusMinus = total_plusMinus / total_games,
+    avg_off_rating = total_off_rating / total_games,
+    avg_def_rating = total_def_rating / total_games,
+    eff_fg_percent_pg = total_eff_fg_percentage / total_games,
+    avg_true_shooting = total_true_shooting_percentage / total_games,
+    avg_usage = total_usage / total_games,
+    avg_pace = total_pace / total_games,
+    avg_possessions = total_possessions / total_games,
+    avg_secondChance = total_second_chance_pts / total_games,
+    avg_fastBreak = total_fast_break_pts / total_games
+  )
 
 
