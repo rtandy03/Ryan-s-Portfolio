@@ -22,69 +22,69 @@ team_statsE_df <- read.csv("data/TeamStatisticsExtended.csv")
 # List of first and second string point guards
 
 point_guards <- c(
-  "Trae Young",
   "C.J. McCollum",
-  "Ryan Nembhard",
   "Derrick White",
-  "Payton Pritchard",
-  "Dennis Schroder",
-  "Keon Ellis",
-  "LaMelo Ball",
-  "Tre Mann",
+  "Mikel Brown Jr.",
+  "Coby White",
   "Josh Giddey",
-  "Rob Dillingham",
   "James Harden",
-  "Dennis Schroder",
   "Kyrie Irving",
-  "Dante Exum",
   "Jamal Murray",
-  "Tyus Jones",
   "Cade Cunningham",
-  "Marcus Sasser",
   "Stephen Curry",
-  "De'Anthony Melton",
-  "Brandin Podziemski",
   "Fred VanVleet",
-  "Marcus Smart",
   "Tyrese Haliburton",
-  "T.J. McConnell",
   "Darius Garland",
-  "Kris Dunn",
   "Luka Doncic",
-  "Collin Sexton",
-  "Ja Morant",
-  "Derrick Rose",
+  "Scotty Pippen Jr.",
   "Davion Mitchell",
-  "Kasparas Jakucionis",
-  "Kevin Porter Jr.",
-  "AJ Green",
-  "Mike Conley",
-  "Monte Morris",
+  "Ryan Rollins",
+  "LaMelo Ball",
   "Dejounte Murray",
-  "Jose Alvarado",
   "Jalen Brunson",
-  "Miles McBride",
   "Shai Gilgeous-Alexander",
-  "Cason Wallace",
-  "Anthony Black",
-  "Cole Anthony",
+  "Jalen Suggs",
   "Tyrese Maxey",
-  "Kyle Lowry",
   "Devin Booker",
-  "Tyus Jones",
-  "Anfernee Simons",
-  "Scoot Henderson",
+  "Ja Morant",
+  "Darius Acuff Jr.",
   "De'Aaron Fox",
-  "Dylan Harper",
-  "De'Aaron Fox",
-  "Dylan Harper",
   "Immanuel Quickley",
-  "Davion Mitchell",
   "Keyonte George",
-  "Jordan Clarkson",
-  "Tyler Kolek",
-  "Jordan Poole"
+  "Trae Young", 
+  "Kingston Flemings",
+  "Ben Saraf",
+  "Payton Pritchard",
+  "Christian Anderson",
+  "Tre Jones",
+  "Dennis Schroder",
+  "Darius Jenkins",
+  "T.J. McConnell",
+  "Dru Smith",
+  "Kevin Porter Jr.",
+  "Miles McBride",
+  "Anthony Black",
+  "Labaron Philon",
+  "Jamal Shead",
+  "Carlton Carrington",
+  "Marcus Sasser",
+  "Tyus Jones",
+  "De'Anthony Melton",
+  "Marcus Smart",
+  "Kris Dunn",
+  "Collin Sexton",
+  "Ty-Jerome",
+  "Isaiah Evans",
+  "Jeremiah Fears",
+  "Ajay Mitchell",
+  "Collin Gillespie",
+  "Scoot Henderson",
+  "Dylan Harper",
+  "Mark Sears",
+  "Isaiah Collier",
+  "Brandin Podziemski"
 )
+
 
 warriors_roster <- c(
   "Gary Payton II",
@@ -188,7 +188,7 @@ warriors_df <- warriors_df %>%
 yearly_totals_df <- current_pg_df %>% 
   mutate(numMinutes = as.double(numMinutes),
          off_impact = effectiveFieldGoalPercentage * (points + reboundsTotal + assists - turnovers) / max(c(1,possessions)) * usagePercentage * 1000) %>% 
-  filter(gameType %in% c("Regular Season", "Playoffs"), 
+  filter(gameType %in% c("Regular Season", "Playoffs", "Play-in Tournament"), 
          numMinutes > 0, 
          !is.na(name)) %>% 
   group_by(gameType, season, personId, name) %>% 
@@ -274,7 +274,7 @@ reg_season_df <- yearly_totals_df %>%
          & season %in% bp_era)
 
 playoffs_df <- yearly_totals_df %>% 
-  filter(gameType == "Playoffs"
+  filter(gameType %in% c("Playoffs", "Play-in Tournament")
          & season %in% bp_era)
 
 
@@ -297,10 +297,19 @@ ggsave("Offensive-Impact_vs_Minutes.pdf",
        units = "cm")
 ggsave("Offensive-Impact_vs_Minutes.pdf")
 
-  
 
-
-
-
-
+ggplot(data = playoffs_df, aes(x = avg_minutes, y = avg_off_impact)) +
+  geom_image(aes(image = image)) + 
+  facet_wrap(~ season) +
+  labs(
+    title = "Offensive Imact vs Minutes (23/24 - 25/26",
+    x = "Minutes per games",
+    y = "Offensive Impact"
+    ) +
+  theme_minimal()
+ggsave("Offensive-Impact_vs_Minutes_Playoffs.pdf",
+       width = 12,
+       height = 12,
+       units = "cm")
+ggsave("Offensive-Impact_vs_Minutes_Playoffs.pdf")
 
