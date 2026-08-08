@@ -118,6 +118,7 @@ warriors_df <- players_df %>%
   full_join(player_statsE_df, by = "personId")
 
 colnames(current_pg_df)  
+colnames(player_statsE_df)
 
 
 # Vector of columns I deemed important
@@ -136,7 +137,7 @@ imp_cols <- c(
   "teamTurnoverPercentage", "effectiveFieldGoalPercentage", "trueShootingPercentage",
   "usagePercentage", "pace", "pacePer40", "possessions", "pointsOffTurnovers", 
   "pointsSecondChance", "pointsFastBreak","pointsInPaint", "percentPoints2Point",
-  "percentPoints3Point", "percentPointsFastBreak"
+  "percentPoints3Point", "percentPointsFastBreak", "playerImpactEstimate"
 )
 
 
@@ -185,6 +186,8 @@ warriors_df <- warriors_df %>%
 
 # Make yearly totals dataframe
 
+# Optimize this
+
 yearly_totals_df <- current_pg_df %>% 
   mutate(numMinutes = as.double(numMinutes),
          off_impact = effectiveFieldGoalPercentage * (points + reboundsTotal + assists - turnovers) / max(c(1,possessions)) * usagePercentage * 1000) %>% 
@@ -220,6 +223,90 @@ yearly_totals_df <- current_pg_df %>%
             total_efg_perc = sum(effectiveFieldGoalPercentage, na.rm = TRUE),
             total_off_impact = sum(off_impact, na.rm = TRUE),
             total_minutes = sum(numMinutes, na.rm = TRUE),
+            total_estimated_impact = sum(playerImpactEstimate, na.rm = TRUE),
+            total_games = n(),
+            .groups = "drop") %>% 
+  transmute(
+    gameType = gameType,
+    personId = personId,
+    season = season,
+    name = name,
+    gameType = gameType,
+    ppg = round(total_points / total_games, 2),
+    apg = round(total_assists / total_games, 2),
+    rpg = round(total_rebounds / total_games,2),
+    steals_pg = round(total_steals / total_games, 2),
+    blocks_pg = round(total_blocks / total_games, 2),
+    mpg = round(total_minutes / total_games, 2),
+    avg_fgm = round(total_fgm / total_games, 2),
+    avg_fga = round(total_fga / total_games, 2),
+    avg_3ptm = round(total_3ptm / total_games, 2),
+    avg_3pta = round(total_3pta / total_games, 2),
+    avg_ftm = round(total_ftm / total_games, 2),
+    avg_fta = round(total_fta / total_games, 2),
+    avg_turnovers = round(total_turnovers / total_games, 2),
+    avg_personalFoul = round(total_personal_fouls / total_games, 2),
+    avg_plusMinus = round(total_plusMinus / total_games, 2),
+    avg_off_rating = round(total_off_rating / total_games, 2),
+    avg_def_rating = round(total_def_rating / total_games, 2),
+    eff_fg_percent_pg = round(total_eff_fg_percentage / total_games, 2),
+    avg_true_shooting = round(total_true_shooting_percentage / total_games, 2),
+    avg_usage = round(total_usage / total_games, 2),
+    avg_pace = round(total_pace / total_games, 2),
+    avg_possessions = round(total_possessions / total_games, 2),
+    avg_secondChance_pts = round(total_second_chance_pts / total_games, 2),
+    avg_fastBreak_pts = round(total_fast_break_pts / total_games, 2),
+    perc_eff_fg = round(total_eff_fg_percentage / total_games * 100, 2),
+    perc_fg = round(avg_fgm / avg_fga * 100, 2),
+    perc_3pt = round(avg_3ptm / avg_3pta * 100, 2),
+    perc_ft = round(avg_ftm / avg_fta * 100, 2),
+    avg_minutes = round(total_minutes / total_games, 2),
+    avg_impact = round(total_estimated_impact / total_games, 2),
+    avg_off_impact = total_off_impact / total_games,
+    image = paste0(
+      "https://cdn.nba.com/headshots/nba/latest/1040x760/",
+      personId,
+      ".png"
+    )
+  )
+
+
+warriors_totals_df <- warriors_df %>% 
+  mutate(numMinutes = as.double(numMinutes),
+         off_impact = effectiveFieldGoalPercentage * (points + reboundsTotal + assists - turnovers) / max(c(1,possessions)) * usagePercentage * 1000) %>% 
+  filter(gameType %in% c("Regular Season", "Playoffs", "Play-in Tournament"), 
+         numMinutes > 0, 
+         !is.na(name)) %>% 
+  group_by(gameType, season, personId, name) %>% 
+  summarise(total_points = sum(points),
+            total_assists = sum(assists, na.rm = TRUE),
+            total_rebounds = sum(reboundsTotal, na.rm = TRUE),
+            total_steals = sum(steals, na.rm = TRUE),
+            total_blocks = sum(blocks, na.rm = TRUE),
+            total_minutes = sum(numMinutes, na.rm = TRUE),
+            total_fgm = sum(fieldGoalsMade, na.rm = TRUE),
+            total_fga = sum(fieldGoalsAttempted, na.rm = TRUE),
+            total_3ptm = sum(threePointersMade, na.rm = TRUE),
+            total_3pta = sum(threePointersAttempted, na.rm = TRUE),
+            total_ftm = sum(freeThrowsMade, na.rm = TRUE),
+            total_fta = sum(freeThrowsAttempted, na.rm = TRUE),
+            total_turnovers = sum(turnovers, na.rm = TRUE),
+            total_personal_fouls = sum(foulsPersonal, na.rm = TRUE),
+            total_plusMinus = sum(plusMinusPoints, na.rm = TRUE),
+            total_off_rating = sum(offensiveRating, na.rm = TRUE),
+            total_def_rating = sum(defensiveRating, na.rm = TRUE),
+            total_net_rating = sum(netRating, na.rm = TRUE),
+            total_eff_fg_percentage = sum(effectiveFieldGoalPercentage, na.rm = TRUE),
+            total_true_shooting_percentage = sum(trueShootingPercentage, na.rm = TRUE),
+            total_usage = sum(usagePercentage, na.rm = TRUE),
+            total_pace = sum(pace, na.rm = TRUE),
+            total_possessions = sum(possessions, na.rm = TRUE),
+            total_second_chance_pts = sum(pointsSecondChance, na.rm = TRUE),
+            total_fast_break_pts = sum(pointsFastBreak, na.rm = TRUE),
+            total_efg_perc = sum(effectiveFieldGoalPercentage, na.rm = TRUE),
+            total_off_impact = sum(off_impact, na.rm = TRUE),
+            total_minutes = sum(numMinutes, na.rm = TRUE),
+            total_estimated_impact = sum(playerImpactEstimate, na.rm = TRUE),
             total_games = n(),
             .groups = "drop") %>% 
   transmute(
@@ -258,6 +345,7 @@ yearly_totals_df <- current_pg_df %>%
     perc_ft = round(avg_ftm / avg_fta * 100, 2),
     avg_minutes = round(total_minutes / total_games, 2),
     avg_off_impact = total_off_impact / total_games,
+    avg_impact = total_estimated_impact / total_games,
     image = paste0(
       "https://cdn.nba.com/headshots/nba/latest/1040x760/",
       personId,
@@ -277,10 +365,15 @@ playoffs_df <- yearly_totals_df %>%
   filter(gameType %in% c("Playoffs", "Play-in Tournament")
          & season %in% bp_era)
 
+warriors_df <- warriors_totals_df %>% 
+  filter(season %in% bp_era)
+
 
 # Visualizations ----------------------------------------------------------
 
 library(ggimage)
+
+# Offensive Impact (Reg Season)
 
 ggplot(data = reg_season_df, aes(x = avg_minutes, y = avg_off_impact)) +
   geom_image(aes(image = image)) +
@@ -297,13 +390,14 @@ ggsave("Offensive-Impact_vs_Minutes.pdf",
        units = "cm")
 ggsave("Offensive-Impact_vs_Minutes.pdf")
 
+# Offensive Impact (Play-in + Playoffs)
 
 ggplot(data = playoffs_df, aes(x = avg_minutes, y = avg_off_impact)) +
   geom_image(aes(image = image)) + 
   facet_wrap(~ season) +
   labs(
-    title = "Offensive Imact vs Minutes (23/24 - 25/26",
-    x = "Minutes per games",
+    title = "Offensive Imact vs Minutes (23/24 - 25/26)",
+    x = "Minutes per game",
     y = "Offensive Impact"
     ) +
   theme_minimal()
@@ -313,3 +407,19 @@ ggsave("Offensive-Impact_vs_Minutes_Playoffs.pdf",
        units = "cm")
 ggsave("Offensive-Impact_vs_Minutes_Playoffs.pdf")
 
+# Estimated Impact (Regular Season)
+
+ggplot(data = reg_season_df, aes(x = avg_minutes, y = avg_impact)) +
+  geom_image(aes(image = image)) +
+  facet_wrap(~ season) +
+  labs(
+    title = "Impact vs Minutes (23/24 - 25/26)",
+    x = "Minutes per game",
+    y = "Player Impact"
+  ) +
+  theme_minimal()
+ggsave("Impact_vs_Minutes_RS.pdf",
+       width = 12,
+       height = 12,
+       units = "cm")
+ggsave("Impact_vs_Minutes_RS.pdf")
