@@ -17,5 +17,13 @@ I completed this in Python, and did so using the following libraries:
 * dotenv
 
 
+# Podz is Good
+- dataset url: **https://www.kaggle.com/datasets/eoinamoore/historical-nba-data-and-player-box-scores**
+
+I'm creating a set of visualizations to show that NBA player Brandin Podziemski is not as bad as the public may think he is. 
+
+The dataset was downloaded from Kaggle, including box score and other types of player and team statistics dating from the 1947 season all the way to today.
+There are 9 total data sets totaling up to 1.86 GB of data. 
+
         
       
