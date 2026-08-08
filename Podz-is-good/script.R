@@ -1,9 +1,6 @@
 
 ### Brandin Podziemski Supremecy --------------------------------------------
 
-getwd()
-setwd("C:/Users/ryant/OneDrive/Documents/Ryan-s-Portfolio/Podz-is-good")
-
 library(tidyverse)
 
 # Load Datasets 
@@ -107,18 +104,9 @@ warriors_roster <- c(
   "Malevy Leons"
 )
 
-current_pg_df <- players_df %>% 
+uncleaned_df <- players_df %>% 
   unite(name, firstName, lastName, sep = " ") %>% 
-  filter(name %in% point_guards) %>% 
   full_join(player_statsE_df, by = "personId")
-
-warriors_df <- players_df %>% 
-  unite(name, firstName, lastName, sep = " ") %>% 
-  filter(name %in% warriors_roster) %>% 
-  full_join(player_statsE_df, by = "personId")
-
-colnames(current_pg_df)  
-colnames(player_statsE_df)
 
 
 # Vector of columns I deemed important
@@ -143,12 +131,7 @@ imp_cols <- c(
 
 # Select important columns and more separating
 
-current_pg_df <- current_pg_df %>% 
-  select(imp_cols) %>% 
-  separate(gameDateTimeEst, c("game_date", "time_est"), sep = " ") %>% 
-  separate(game_date, c("year", "month", "day"), sep = "-")
-
-warriors_df <- warriors_df %>% 
+uncleaned_df <- uncleaned_df %>% 
   select(imp_cols) %>% 
   separate(gameDateTimeEst, c("game_date", "time_est"), sep = " ") %>% 
   separate(game_date, c("year", "month", "day"), sep = "-")
@@ -159,20 +142,8 @@ warriors_df <- warriors_df %>%
 first_half <- c(10, 11, 12)
 second_half <- c(1, 2, 3, 4, 5, 6)
 
-current_pg_df <- current_pg_df %>% 
+uncleaned_df <- uncleaned_df %>% 
   mutate(
-    year = as.numeric(year),
-    month = as.numeric(month),
-    day = as.numeric(day),
-    season = case_when(
-      month %in% first_half ~ paste0(year, "-", substr(year + 1, 3, 4)),
-      month %in% second_half ~ paste0(year - 1, "-", substr(year, 3, 4))
-    )
-  ) %>% 
-  select(season, everything())
-
-warriors_df <- warriors_df %>% 
-    mutate(
     year = as.numeric(year),
     month = as.numeric(month),
     day = as.numeric(day),
@@ -186,11 +157,9 @@ warriors_df <- warriors_df %>%
 
 # Make yearly totals dataframe
 
-# Optimize this
-
-yearly_totals_df <- current_pg_df %>% 
+yearly_totals_df <- uncleaned_df %>% 
   mutate(numMinutes = as.double(numMinutes),
-         off_impact = effectiveFieldGoalPercentage * (points + reboundsTotal + assists - turnovers) / max(c(1,possessions)) * usagePercentage * 1000) %>% 
+         off_impact = effectiveFieldGoalPercentage * (points + reboundsTotal + assists - turnovers) / pmax(1,possessions) * usagePercentage * 1000) %>% 
   filter(gameType %in% c("Regular Season", "Playoffs", "Play-in Tournament"), 
          numMinutes > 0, 
          !is.na(name)) %>% 
@@ -270,13 +239,17 @@ yearly_totals_df <- current_pg_df %>%
     )
   )
 
+# Only 25/26 second half
 
-warriors_totals_df <- warriors_df %>% 
+post_allstar_2026 <- uncleaned_df %>% 
   mutate(numMinutes = as.double(numMinutes),
-         off_impact = effectiveFieldGoalPercentage * (points + reboundsTotal + assists - turnovers) / max(c(1,possessions)) * usagePercentage * 1000) %>% 
-  filter(gameType %in% c("Regular Season", "Playoffs", "Play-in Tournament"), 
-         numMinutes > 0, 
-         !is.na(name)) %>% 
+         off_impact = effectiveFieldGoalPercentage * (points + reboundsTotal + assists - turnovers) / pmax(1,possessions) * usagePercentage * 1000) %>%
+  filter(gameType == "Regular Season",
+         numMinutes > 0,
+         !is.na(name),
+         month > 1 & month < 5, # Feb - April
+         day >= 15,
+         season == "2025-26") %>%  
   group_by(gameType, season, personId, name) %>% 
   summarise(total_points = sum(points),
             total_assists = sum(assists, na.rm = TRUE),
@@ -344,8 +317,8 @@ warriors_totals_df <- warriors_df %>%
     perc_3pt = round(avg_3ptm / avg_3pta * 100, 2),
     perc_ft = round(avg_ftm / avg_fta * 100, 2),
     avg_minutes = round(total_minutes / total_games, 2),
+    avg_impact = round(total_estimated_impact / total_games, 2),
     avg_off_impact = total_off_impact / total_games,
-    avg_impact = total_estimated_impact / total_games,
     image = paste0(
       "https://cdn.nba.com/headshots/nba/latest/1040x760/",
       personId,
@@ -357,16 +330,24 @@ warriors_totals_df <- warriors_df %>%
 
 bp_era = c("2023-24", "2024-25", "2025-26")
 
-reg_season_df <- yearly_totals_df %>% 
+pgs_rs_df <- yearly_totals_df %>% 
   filter(gameType == "Regular Season"
-         & season %in% bp_era)
+         & season %in% bp_era
+         & name %in% point_guards)
 
-playoffs_df <- yearly_totals_df %>% 
+pgs_2ndHalf_rs_df <- post_allstar_2026 %>% 
+  filter(name %in% point_guards)
+
+# Need to combine to make Postseason !!!
+
+pgs_playoff_df <- yearly_totals_df %>% 
   filter(gameType %in% c("Playoffs", "Play-in Tournament")
-         & season %in% bp_era)
+         & season %in% bp_era
+         & name %in% point_guards)
 
-warriors_df <- warriors_totals_df %>% 
-  filter(season %in% bp_era)
+warriors_df <- yearly_totals_df %>% 
+  filter(season %in% bp_era
+         & name %in% warriors_roster)
 
 
 # Visualizations ----------------------------------------------------------
@@ -375,7 +356,7 @@ library(ggimage)
 
 # Offensive Impact (Reg Season)
 
-ggplot(data = reg_season_df, aes(x = avg_minutes, y = avg_off_impact)) +
+ggplot(data = pgs_rs_df, aes(x = avg_minutes, y = avg_off_impact)) +
   geom_image(aes(image = image)) +
   facet_wrap(~ season) + 
   labs(
@@ -392,7 +373,7 @@ ggsave("Offensive-Impact_vs_Minutes.pdf")
 
 # Offensive Impact (Play-in + Playoffs)
 
-ggplot(data = playoffs_df, aes(x = avg_minutes, y = avg_off_impact)) +
+ggplot(data = pgs_playoff_df, aes(x = avg_minutes, y = avg_off_impact)) +
   geom_image(aes(image = image)) + 
   facet_wrap(~ season) +
   labs(
@@ -407,9 +388,12 @@ ggsave("Offensive-Impact_vs_Minutes_Playoffs.pdf",
        units = "cm")
 ggsave("Offensive-Impact_vs_Minutes_Playoffs.pdf")
 
+pgs_playoff_df %>% 
+  filter(name == "Stephen Curry")
+
 # Estimated Impact (Regular Season)
 
-ggplot(data = reg_season_df, aes(x = avg_minutes, y = avg_impact)) +
+ggplot(data = pgs_rs_df, aes(x = avg_minutes, y = avg_impact)) +
   geom_image(aes(image = image)) +
   facet_wrap(~ season) +
   labs(
@@ -423,3 +407,19 @@ ggsave("Impact_vs_Minutes_RS.pdf",
        height = 12,
        units = "cm")
 ggsave("Impact_vs_Minutes_RS.pdf")
+
+# Estimated Impact 2nd Half (Regular Season) (USE)
+
+ggplot(data = pgs_2ndHalf_rs_df, aes(x = avg_minutes, y = avg_impact)) +
+  geom_image(aes(image = image)) +
+  labs(
+    title = "Impact vs Minutes (Post All Star Break)",
+    x = "Minutes Per Game",
+    y = "Impact"
+  ) +
+  theme_minimal()
+ggsave("Impact_vs_Minutes_PAB.pdf",
+       width = 12,
+       height = 12,
+       units = "cm")
+ggsave("Impact_vs_Minutes_PAB.pdf")
