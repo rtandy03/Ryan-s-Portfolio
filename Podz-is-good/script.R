@@ -412,12 +412,26 @@ ggsave("Impact_vs_Minutes_RS.pdf")
 
 ggplot(data = pgs_2ndHalf_rs_df, aes(x = avg_minutes, y = avg_impact)) +
   geom_image(aes(image = image)) +
+  geom_point(
+    data = pgs_2ndHalf_rs_df %>% filter(name == "Brandin Podziemski"),
+    shape = 1,
+    size = 6,
+    stroke = 1
+  ) +
   labs(
     title = "Impact vs Minutes (Post All Star Break)",
     x = "Minutes Per Game",
     y = "Impact"
   ) +
-  theme_minimal()
+  theme(
+    plot.title = element_text(
+      hjust = 0,
+      size = 10,
+      color = "blue",
+      face = "bold"
+      ),
+    panel.grid = element_blank()
+  )
 ggsave("Impact_vs_Minutes_PAB.pdf",
        width = 12,
        height = 12,
