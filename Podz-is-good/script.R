@@ -232,6 +232,7 @@ yearly_totals_df <- uncleaned_df %>%
     avg_minutes = round(total_minutes / total_games, 2),
     avg_impact = round(total_estimated_impact / total_games, 2),
     avg_off_impact = total_off_impact / total_games,
+    games_played = total_games,
     image = paste0(
       "https://cdn.nba.com/headshots/nba/latest/1040x760/",
       personId,
@@ -319,6 +320,7 @@ post_allstar_2026 <- uncleaned_df %>%
     avg_minutes = round(total_minutes / total_games, 2),
     avg_impact = round(total_estimated_impact / total_games, 2),
     avg_off_impact = total_off_impact / total_games,
+    games_played = total_games,
     image = paste0(
       "https://cdn.nba.com/headshots/nba/latest/1040x760/",
       personId,
@@ -408,32 +410,78 @@ ggsave("Impact_vs_Minutes_RS.pdf",
        units = "cm")
 ggsave("Impact_vs_Minutes_RS.pdf")
 
-# Estimated Impact 2nd Half (Regular Season) (USE)
 
-ggplot(data = pgs_2ndHalf_rs_df, aes(x = avg_minutes, y = avg_impact)) +
+# Graph 1 (Estimated Impact post all-star break 2025/26) 
+
+p_1 <- ggplot(data = pgs_2ndHalf_rs_df, aes(x = avg_minutes, y = avg_impact)) +
   geom_image(aes(image = image)) +
   geom_point(
     data = pgs_2ndHalf_rs_df %>% filter(name == "Brandin Podziemski"),
     shape = 1,
-    size = 6,
+    size = 8,
     stroke = 1
   ) +
   labs(
-    title = "Impact vs Minutes (Post All Star Break)",
+    title = "Player Impact vs Minutes (Post All Star Break)",
     x = "Minutes Per Game",
-    y = "Impact"
+    y = "Player Impact"
   ) +
   theme(
     plot.title = element_text(
       hjust = 0,
-      size = 10,
-      color = "blue",
+      size = 12,
+      color = "black",
       face = "bold"
       ),
-    panel.grid = element_blank()
+    panel.background = element_rect(fill = "white"),
+    panel.grid = element_line(color = "lightgray")
   )
+
 ggsave("Impact_vs_Minutes_PAB.pdf",
        width = 12,
        height = 12,
        units = "cm")
 ggsave("Impact_vs_Minutes_PAB.pdf")
+
+
+
+# Player Impact (GSW)
+
+ggplot(data = warriors_df, aes(x = reorder(name, avg_impact), y = avg_impact)) +
+  geom_col() +
+  geom_image(aes(image = image, y = avg_impact)) +
+  facet_grid(~ season) +
+  theme(
+    axis.text.x = element_blank(),
+    axis.ticks.x = element_blank()
+  )
+
+ggsave("Warriors_impact.png",
+       width = 12,
+       height = 12,
+       units = "cm")
+ggsave("Warriors_impact.png")
+
+# Dashboard ---------------------------------------------------------------
+
+library(shiny)
+
+ui <-  fluidPage(
+  
+  titlePanel("NBA Player Impact Dashboard"),
+  
+  mainPanel(
+    plotOutput("player_plot", height = "700px")
+  )
+)
+
+server <- function(input, output) {
+  
+  output$player_plot <- renderPlot({
+    p_1
+  })
+}
+
+shinyApp(ui = ui, server = server)
+
+
